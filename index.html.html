@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kalkulačka preskripce Attends</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#dbeafe;color:#1e3a5f;min-height:100vh;padding:0 0 24px;}
+  .wrap{max-width:780px;margin:0 auto;}
+  .card{background:#fff;border:1px solid #bfdbfe;border-radius:12px;padding:16px 18px;margin-bottom:12px;box-shadow:0 2px 8px rgba(30,64,175,.07);}
+  .lbl{font-size:11px;color:#6b7280;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em;}
+  .seg{display:flex;border:1px solid #93c5fd;border-radius:8px;overflow:hidden;}
+  .seg button{flex:1;padding:7px 4px;border:none;background:transparent;color:#6b7280;font-size:12px;cursor:pointer;transition:background .15s;}
+  .seg button.on{background:#1d4ed8;color:#fff;font-weight:600;}
+  .seg button:not(:last-child){border-right:1px solid #93c5fd;}
+  .ctab{padding:4px 10px;border:1px solid #93c5fd;border-radius:20px;background:transparent;color:#1d4ed8;font-size:11px;cursor:pointer;white-space:nowrap;margin-bottom:4px;}
+  .ctab.on{background:#1d4ed8;color:#fff;border-color:transparent;font-weight:500;}
+  #catalog{max-height:220px;overflow-y:auto;border:1px solid #bfdbfe;border-radius:8px;}
+  .prow{display:grid;grid-template-columns:60px 1fr 38px 96px 28px;align-items:center;gap:5px;padding:6px 10px;border-bottom:1px solid #eff6ff;}
+  .prow:last-child{border-bottom:none;}
+  .prow:hover{background:#eff6ff;}
+  .pcode{font-size:10px;color:#9ca3af;}
+  .pname{font-size:12px;color:#111827;}
+  .pst{font-size:10px;background:#eff6ff;border-radius:4px;padding:2px 5px;color:#1d4ed8;text-align:center;font-weight:500;}
+  .pinfo{font-size:10px;color:#9ca3af;text-align:right;}
+  .abtn{width:24px;height:24px;border-radius:50%;border:1px solid #93c5fd;background:transparent;color:#1d4ed8;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .abtn:hover{background:#1d4ed8;color:#fff;}
+  .srow{display:grid;grid-template-columns:1fr 86px 60px 86px 24px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid #eff6ff;font-size:12px;}
+  .srow:last-child{border-bottom:none;}
+  .adj{width:22px;height:22px;border-radius:50%;border:1px solid #93c5fd;background:#fff;color:#1d4ed8;font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+  .adj:hover{background:#1d4ed8;color:#fff;}
+  .met{background:#eff6ff;border-radius:8px;padding:8px 12px;}
+  .bwrap{height:9px;background:#dbeafe;border-radius:5px;overflow:hidden;margin:5px 0 3px;}
+  .bfill{height:100%;border-radius:5px;transition:width .3s,background .3s;}
+  .ok{color:#16a34a!important;}
+  .warn{color:#dc2626!important;}
+  .muted{color:#9ca3af!important;}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 11px;border-radius:20px;background:#dbeafe;color:#1d4ed8;}
+  .sbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:#eff6ff;border-radius:8px;margin-top:10px;font-size:11px;border:1px solid #bfdbfe;}
+  .act-btn{padding:7px 14px;border:1px solid #93c5fd;border-radius:8px;background:#fff;color:#1d4ed8;font-size:12px;cursor:pointer;}
+  .act-btn:hover{background:#eff6ff;}
+  .act-btn.primary{background:#1d4ed8;color:#fff;border-color:transparent;}
+  .act-btn.primary:hover{background:#1e40af;}
+  .lim-input{width:100%;padding:6px 9px;border:1px solid #93c5fd;border-radius:8px;background:#fff;color:#111827;font-size:13px;font-weight:500;}
+  .header-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid #bfdbfe;}
+  input[type=text]{width:100%;margin-bottom:8px;padding:7px 11px;border:1px solid #93c5fd;border-radius:8px;background:#fff;color:#111827;font-size:12px;outline:none;}
+  input[type=text]:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(59,130,246,.1);}
+  pre{font-family:"Courier New",monospace;}
+  @media(max-width:600px){
+    .wrap{padding:10px 8px 0;}
+    .card{padding:12px 12px;margin-bottom:10px;}
+    /* header grid → stack */
+    .header-row{flex-direction:column;align-items:flex-start;gap:6px;}
+    /* stupeň + perioda → stack */
+    .grid2col{grid-template-columns:1fr!important;}
+    /* seg buttons bigger touch targets */
+    .seg button{padding:10px 4px;font-size:13px;}
+    /* catalog row — hide pinfo, compress */
+    .prow{grid-template-columns:54px 1fr 32px 36px;gap:4px;padding:7px 8px;}
+    .pinfo{display:none;}
+    .abtn{width:34px;height:34px;font-size:20px;}
+    /* selected rows → 2-line layout */
+    .srow{grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:4px;padding:8px 0;}
+    .srow-name{grid-column:1/2;}
+    .srow-ctrl{grid-column:2/3;grid-row:1/2;display:flex;align-items:center;gap:4px;justify-content:flex-end;}
+    .srow-ks{grid-column:1/2;grid-row:2/3;font-size:11px;color:#6b7280;}
+    .srow-price{grid-column:2/3;grid-row:2/3;text-align:right;font-size:12px;font-weight:600;}
+    .srow-del{display:none!important;}
+    .adj{width:34px;height:34px;font-size:16px;}
+    /* totals grid → stack */
+    .totgrid{grid-template-columns:1fr!important;}
+    /* act buttons full width */
+    .btnrow{flex-direction:column;align-items:stretch!important;}
+    .btnrow .act-btn{text-align:center;}
+    /* lim inputs */
+    .lim3col{grid-template-columns:1fr!important;}
+    /* badge bar */
+    .sbar{flex-direction:column;align-items:flex-start;gap:5px;}
+    .sbar-right{margin-left:0!important;display:flex;gap:14px;}
+    /* export pre */
+    pre{font-size:10px;}
+    input[type=text]{font-size:14px;padding:10px 12px;}
+  }
+</style>
+</head>
+<body>
+<div style="background:linear-gradient(135deg,#1e40af 0%,#1d6db5 60%,#2563eb 100%);padding:24px 24px 20px;text-align:center;box-shadow:0 4px 18px rgba(30,64,175,.25);">
+  <div style="color:#fff;font-size:16px;font-weight:700;line-height:1.4;">Orientační výpočet kombinace inkontinenčních pomůcek Attends</div>
+  <div style="color:#bfdbfe;font-size:11px;margin-top:5px;">k 1. 5. 2026 &nbsp;·&nbsp; VZP metodika &nbsp;·&nbsp; MSM, spol. s r.o.</div>
+</div>
+<div class="wrap" style="padding-top:16px;">
+
+<div class="card">
+  <div class="header-row">
+    <div>
+      <div style="font-size:15px;font-weight:600;color:#111827;">Kalkulačka preskripce</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:2px;">ZP absorpční pro inkontinentní pacienty · platnost od 1. 5. 2026</div>
+    </div>
+    
+  </div>
+
+  <div class="grid2col" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;">
+    <div>
+      <div class="lbl">Stupeň inkontinence</div>
+      <div class="seg" id="sst">
+        <button onclick="setSt(1)" class="on">I. stupeň</button>
+        <button onclick="setSt(2)">II. stupeň</button>
+        <button onclick="setSt(3)">III. stupeň</button>
+      </div>
+    </div>
+    <div>
+      <div class="lbl">Preskripce na</div>
+      <div class="seg" id="sper">
+        <button onclick="setPer(1)" class="on">1 měsíc</button>
+        <button onclick="setPer(2)">2 měsíce</button>
+        <button onclick="setPer(3)">3 měsíce</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sbar">
+    <span id="b-st" class="badge">I. stupeň</span>
+    <span id="b-per" class="badge">1 měsíc</span>
+    <span style="color:#9ca3af;">·</span>
+    <span id="b-desc" style="color:#6b7280;">50–100 ml/24h · stresová inkontinence</span>
+    <span style="margin-left:auto;display:flex;gap:16px;">
+      <span style="font-size:11px;">Limit: <strong id="b-fin">437,92 Kč</strong></span>
+      <span style="font-size:11px;">Max: <strong id="b-ks">150 ks</strong></span>
+    </span>
+  </div>
+
+  <div style="margin-top:10px;">
+    <button class="act-btn" onclick="toggleLims()" id="lim-toggle" style="font-size:11px;padding:4px 10px;">▸ Upravit měsíční limity dle pojišťovny</button>
+    <div id="lim-edit" style="display:none;margin-top:8px;">
+      <div style="font-size:11px;color:#6b7280;margin-bottom:6px;">Výchozí hodnoty dle VZP metodiky 1. 5. 2026 — přepište pro jinou pojišťovnu</div>
+      <div class="lim3col" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div><div class="lbl">I. stupeň (Kč/měs.)</div><input class="lim-input" id="li1" type="number" step="0.01" value="437.92" oninput="onLimEdit()"></div>
+        <div><div class="lbl">II. stupeň (Kč/měs.)</div><input class="lim-input" id="li2" type="number" step="0.01" value="876.96" oninput="onLimEdit()"></div>
+        <div><div class="lbl">III. stupeň (Kč/měs.)</div><input class="lim-input" id="li3" type="number" step="0.01" value="1721.43" oninput="onLimEdit()"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;" id="ctabs"></div>
+<input type="text" id="srch" placeholder="🔍 Hledat kód nebo název produktu..." oninput="renderCat()">
+<div id="catalog"></div>
+
+<div id="selh" style="display:none;font-size:14px;font-weight:600;color:#111827;margin:16px 0 6px;">Vybrané pomůcky — preskripce</div>
+<div class="card" id="selw" style="display:none;padding:12px 16px;"><div id="sell"></div></div>
+
+<div class="card" id="totw" style="display:none;">
+  <div style="padding:8px 12px;background:#f9fafb;border-radius:8px;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;">
+    <span id="s-st" class="badge">I. stupeň</span>
+    <span id="s-per" class="badge">1 měsíc</span>
+    <span style="color:#6b7280;">Limit: <strong id="s-lim">—</strong> · Max: <strong id="s-mks">—</strong></span>
+  </div>
+  <div class="totgrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:10px;">
+    <div><div class="lbl">Celková cena</div><div style="font-size:18px;font-weight:600;" id="tfin">0,00 Kč</div></div>
+    <div style="text-align:center;"><div class="lbl">Celkem kusů</div><div style="font-size:18px;font-weight:600;" id="tks">0 ks</div></div>
+    <div style="text-align:right;"><div class="lbl">Zbývá z limitu</div><div style="font-size:18px;font-weight:600;" id="trem">—</div></div>
+  </div>
+  <div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;"><span>Finanční limit</span><span id="fpct">0 %</span></div>
+    <div class="bwrap"><div class="bfill" id="bfin" style="width:0;background:#3b82f6;"></div></div>
+    <div style="font-size:11px;margin-bottom:4px;" id="fstat" class="muted"> </div>
+  </div>
+  <div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;"><span>Množstevní limit (max. 150 ks/měs.)</span><span id="kpct">0 %</span></div>
+    <div class="bwrap"><div class="bfill" id="bks" style="width:0;background:#3b82f6;"></div></div>
+    <div style="font-size:11px;" id="kstat" class="muted"> </div>
+  </div>
+  <div id="podl-block" style="display:none;margin-top:10px;padding:10px 12px;background:#fefce8;border:1px solid #fde68a;border-radius:8px;">
+    <div style="font-size:11px;font-weight:600;color:#92400e;margin-bottom:6px;">Podložky Cover Dri — nad rámec limitu (pouze III. stupeň)</div>
+    <div class="totgrid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:6px;">
+      <div><div class="lbl">Cena podložek</div><div style="font-size:15px;font-weight:600;" id="podl-fin">0,00 Kč</div></div>
+      <div style="text-align:center;"><div class="lbl">Kusů podložek</div><div style="font-size:15px;font-weight:600;" id="podl-ks">0 ks</div></div>
+      <div style="text-align:right;"><div class="lbl">Zbývá z limitu</div><div style="font-size:15px;font-weight:600;" id="podl-rem">—</div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;"><span>Limit podložek (30 ks / měsíc, nad rámec preskripce)</span><span id="podl-pct">0 %</span></div>
+      <div class="bwrap" style="background:#fef9c3;"><div class="bfill" id="podl-bar" style="width:0;background:#f59e0b;"></div></div>
+      <div style="font-size:11px;" id="podl-stat" class="muted"> </div>
+    </div>
+  </div>
+  <div class="btnrow" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;gap:8px;flex-wrap:wrap;">
+    <span style="font-size:11px;" id="save-status" class="muted">Stav se ukládá automaticky do prohlížeče.</span>
+    <div style="display:flex;gap:8px;">
+      <button class="act-btn primary" onclick="exportSummary()">📋 Exportovat souhrn</button>
+      <button class="act-btn" onclick="clearAll()" style="color:#dc2626;">Vymazat vše</button>
+    </div>
+  </div>
+  <div style="font-size:10px;color:#9ca3af;border-left:3px solid #e5e7eb;padding-left:8px;margin-top:12px;line-height:1.6;">
+    Každý produkt se předepisuje na samostatný Poukaz. Fixační kalhotky se kombinují do výše úhradového limitu daného stupně.
+    Podložky Cover Dri jsou nad rámec preskripčního limitu — předepisují se pouze při III. stupni, max. 30 ks / měsíc.
+  </div>
+</div>
+
+<div id="export-overlay" style="display:none;margin-top:12px;">
+  <div class="card" style="border:2px solid #3b82f6;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:14px;font-weight:600;">Souhrn preskripce</span>
+      <div style="display:flex;gap:8px;">
+        <button class="act-btn primary" onclick="downloadTxt()">⬇ Stáhnout .txt</button>
+        <button class="act-btn" onclick="document.getElementById('export-overlay').style.display='none'">Zavřít ×</button>
+      </div>
+    </div>
+    <pre id="export-text" style="font-size:11px;white-space:pre-wrap;background:#f9fafb;border-radius:8px;padding:12px;line-height:1.7;color:#374151;border:1px solid #e5e7eb;"></pre>
+  </div>
+</div>
+
+<div style="text-align:center;font-size:10px;color:#d1d5db;margin-top:16px;padding-bottom:8px;">
+  MSM, spol. s r.o. · Distributor Attends · Preskripční tabulka platná od 1. 4. 2026 · VZP limity od 1. 5. 2026
+</div>
+
+</div>
+
+<script>
+const LIMS={1:437.92,2:876.96,3:1721.43};
+const STDESCS={1:'50–100 ml/24h · stresová inkontinence',2:'100–200 ml/24h · mobilní pacienti',3:'nad 200 ml/24h · ležící pacienti'};
+const STLBL={1:'I. stupeň',2:'II. stupeň',3:'III. stupeň'};
+const PERLBL={1:'1 měsíc',2:'2 měsíce',3:'3 měsíce'};
+const CATNAMES=['Vše','Vložky Soft','Pleny Soft','Lady / Men','Pull-Ons','Slip Air Comfort','Zalepovací','Vložné pleny','Fixační kalhotky','Podložky*'];
+const P=[
+['5011802','Soft Ultra Mini','0',28,128.50,1],['5001408','Soft Mini','1',20,114.39,1],['5001412','Soft Mini Long','1',16,102.49,1],
+['5001484','Soft Normal','2',12,85.80,1],['5018317','Soft Normal (bal.30)','2',30,170.99,1],
+['5001486','Soft Extra','3',10,90.90,1],['5018316','Soft Extra (bal.30)','3',30,184.60,1],['5001413','Soft Extra Plus','3+',10,85.80,1],
+['5015775','Soft 4 (bal.10)','4',10,92.30,2],['5012507','Soft 4 (bal.30)','4',30,307.50,2],
+['5001417','Soft 5','5',38,395.09,2],['5001418','Soft 6','6',38,395.09,2],['5001419','Soft 7','7',34,395.09,2],
+['5018832','Lady Night Pad 6','6',30,230.00,3],['5001450','For Men 1','1',25,256.90,3],['5016097','Men 2','2',15,115.39,3],
+['5018318','Men 3 (bal.10)','3',10,97.10,3],['5018319','For Men 3 (bal.14)','3',14,145.70,3],['5018320','For Men 4','4',14,153.80,3],
+['5016115','Lady Discreet M','3',10,289.93,3],['5016116','Lady Discreet L','3',10,306.71,3],
+['5016117','Men 3 M (černé)','3',10,306.92,3],['5016118','Men 3 L (černé)','3',10,306.71,3],
+['5015964','Pull-Ons Discreet M','3',10,248.22,4],['5015965','Pull-Ons Discreet L','3',10,274.48,4],
+['5014233','Pull-Ons S','4',22,460.65,4],['5014232','Pull-Ons M','4',22,460.65,4],['5014231','Pull-Ons L','4',22,521.68,4],['5014230','Pull-Ons XL','4',18,460.50,4],
+['5017639','Pull-Ons XXS','6',18,460.50,4],['5014229','Pull-Ons XS','6',22,553.50,4],['5014228','Pull-Ons S','6',18,460.65,4],
+['5014224','Pull-Ons M','6',18,460.65,4],['5014227','Pull-Ons L','6',18,460.65,4],['5014226','Pull-Ons XL','6',16,460.65,4],['5017645','Pull-Ons XXL','6',10,346.10,4],
+['5014225','Pull-Ons S','8',16,553.30,4],['5014223','Pull-Ons M','8',16,553.30,4],['5014221','Pull-Ons L','8',16,553.30,4],['5014222','Pull-Ons XL','8',14,553.30,4],
+['5018719','Slip Air Comfort S','8',21,309.79,5],['5018720','Slip Air Comfort M','8',30,526.49,5],['5018721','Slip Air Comfort L','8',30,526.49,5],['5018722','Slip Air Comfort XL','8',20,478.99,5],
+['5018723','Slip Air Comfort XS','9',32,478.99,5],['5018724','Slip Air Comfort S','9',21,309.79,5],['5018726','Slip Air Comfort M','9',28,583.99,5],['5018727','Slip Air Comfort L','9',28,583.99,5],['5018728','Slip Air Comfort XL','9',20,501.49,5],
+['5018729','Slip Air Comfort S','10',21,478.99,5],['5018731','Slip Air Comfort M','10',26,525.99,5],['5018732','Slip Air Comfort L','10',26,525.99,5],['5018733','Slip Air Comfort XL','10',15,438.99,5],
+['5001464','Flex Extra S','8',28,516.76,6],['5001465','Flex Extra M','8',28,553.80,6],['5001467','Flex Extra L','8',28,578.86,6],['5001468','Flex Extra XL','8',26,651.97,6],
+['5001470','Flex Super S','9',26,651.97,6],['5001472','Flex Super M','9',26,651.97,6],['5001473','Flex Super L','9',26,651.97,6],['5001474','Flex Super XL','9',22,578.86,6],
+['5001475','Flex Super Plus S','10',22,578.86,6],['5001476','Flex Super Plus M','10',22,578.86,6],['5001477','Flex Super Plus L','10',22,578.86,6],['5001478','Flex Super Plus XL','10',20,651.97,6],
+['5014378','Classic M','10',15,337.49,6],['5014377','Classic L','10',15,337.49,6],['5014376','Classic XL','10',15,374.99,6],
+['5001402','Adjustable M','10',21,614.08,6],['5001404','Adjustable L','10',21,633.00,6],
+['5001421','Active Extra M','8',28,422.00,6],['5001429','Active Extra L','8',28,482.00,6],['5001423','Active Super M','9',28,562.00,6],['5001432','Active Super L','9',28,562.00,6],
+['5001433','Active Super Plus M','10',28,623.65,6],['5001435','Active Super Plus L','10',28,623.65,6],
+['5001441','Contours Regular 6','6',35,356.26,7],['5001442','Contours Regular 7','7',28,343.66,7],['5001444','Contours Regular 8','8',28,407.36,7],
+['5001445','Contours Regular 9','9',28,461.50,7],['5016674','Contours Regular 10','10',21,431.34,7],['5016675','Contours Air Comfort 10','10',21,473.52,7],['5016712','Contours Air Comfort 11','11',21,521.48,7],
+['5001425','Stretch-Pant S/M/L','-',1,22.27,8],['5001427','Stretch-Pant XL/XXL','-',1,27.49,8],['5017016','Stretch-Pant XXXL','-',1,26.15,8],['5001424','Stretch Fit S/M/L','-',1,207.45,8],
+['5000348','Cover Dri Plus 40x60','-',50,300.80,9],['5000349','Cover Dri Plus 60x60','-',50,467.53,9],['5000351','Cover Dri Plus 60x90','-',30,326.27,9],
+['5000354','Cover Dri Plus 80x90','-',30,466.63,9],['5000353','Cover Dri Plus 80x170','-',30,564.47,9],['5000364','Cover Dri Plus 80x170 (7ks)','-',7,159.86,9],
+];
+let st=1,per=1,activeCat=0,sel={};
+let customLims={1:437.92,2:876.96,3:1721.43};
+function getLim(){return customLims[st]*per;}
+function getMaxKs(){return 150*per;}
+function fmt(n){return n.toLocaleString('cs-CZ',{minimumFractionDigits:2,maximumFractionDigits:2})+' Kč';}
+function getLimFromInputs(){customLims[1]=parseFloat(document.getElementById('li1').value)||437.92;customLims[2]=parseFloat(document.getElementById('li2').value)||876.96;customLims[3]=parseFloat(document.getElementById('li3').value)||1721.43;}
+function onLimEdit(){getLimFromInputs();updateBadges();updateTotals();saveState();}
+function toggleLims(){const el=document.getElementById('lim-edit');const open=el.style.display==='none';el.style.display=open?'block':'none';document.getElementById('lim-toggle').textContent=(open?'▾':'▸')+' Upravit měsíční limity dle pojišťovny';}
+function updateBadges(){
+  const lf=getLim(),lk=getMaxKs();
+  ['b-st','s-st'].forEach(id=>document.getElementById(id).textContent=STLBL[st]);
+  ['b-per','s-per'].forEach(id=>document.getElementById(id).textContent=PERLBL[per]);
+  document.getElementById('b-desc').textContent=STDESCS[st];
+  document.getElementById('b-fin').textContent=fmt(lf);document.getElementById('b-ks').textContent=lk+' ks';
+  document.getElementById('s-lim').textContent=fmt(lf);document.getElementById('s-mks').textContent=lk+' ks';
+}
+function setSt(v){
+  st=v;
+  document.querySelectorAll('#sst button').forEach((b,i)=>b.classList.toggle('on',i===v-1));
+  if(v!==3){Object.keys(sel).forEach(code=>{const p=getP(code);if(p&&p[5]===9)delete sel[code];});}
+  updateBadges();renderCat();renderSel();updateTotals();saveState();
+}
+function setPer(v){per=v;document.querySelectorAll('#sper button').forEach((b,i)=>b.classList.toggle('on',i===v-1));updateBadges();updateTotals();saveState();}
+function buildCatTabs(){document.getElementById('ctabs').innerHTML=CATNAMES.map((c,i)=>`<button class="ctab${i===0?' on':''}" onclick="setcat(${i})">${c}</button>`).join('');}
+function setcat(i){activeCat=i;document.querySelectorAll('.ctab').forEach((b,j)=>b.classList.toggle('on',j===i));renderCat();}
+function renderCat(){
+  const q=document.getElementById('srch').value.toLowerCase();
+  const rows=P.filter(p=>(activeCat===0||p[5]===activeCat)&&(!q||p[0].includes(q)||p[1].toLowerCase().includes(q)));
+  const el=document.getElementById('catalog');
+  if(!rows.length){el.innerHTML='<div style="padding:14px;text-align:center;font-size:12px;color:#9ca3af;">Žádné výsledky</div>';return;}
+  el.innerHTML=rows.map(p=>{
+    const isPodl=p[5]===9;
+    const blocked=isPodl&&st!==3;
+    const note=blocked?' <span style="font-size:10px;color:#dc2626;">— pouze III. stupeň</span>'
+              :isPodl?' <span style="font-size:10px;color:#d97706;">nad rámec limitu</span>':'';
+    const btn=blocked
+      ?`<button class="abtn" disabled title="Podložky pouze pro III. stupeň" style="opacity:.3;cursor:not-allowed;">+</button>`
+      :`<button class="abtn" onclick="addProd('${p[0]}')" title="Přidat">+</button>`;
+    return `<div class="prow" style="${blocked?'opacity:.5;':''}"><span class="pcode">${p[0]}</span><span class="pname">${p[1]}${note}</span><span class="pst">${p[2]!=='-'?'st.'+p[2]:'—'}</span><span class="pinfo">${p[3]} ks · ${fmt(p[4])}</span>${btn}</div>`;
+  }).join('');
+}
+function addProd(code){
+  const p=getP(code);
+  if(p&&p[5]===9&&st!==3){alert('Podložky Cover Dri lze předepisovat pouze při III. stupni inkontinence.');return;}
+  if(!sel[code])sel[code]={qty:0};sel[code].qty++;renderSel();updateTotals();saveState();
+}
+function removeProd(code){delete sel[code];renderSel();updateTotals();saveState();}
+function changeQty(code,d){if(!sel[code])return;sel[code].qty=Math.max(0,sel[code].qty+d);if(sel[code].qty===0)delete sel[code];renderSel();updateTotals();saveState();}
+function clearAll(){sel={};renderSel();updateTotals();saveState();}
+function getP(code){return P.find(x=>x[0]===code);}
+function renderSel(){
+  const keys=Object.keys(sel);const show=keys.length>0;
+  ['selh','selw','totw'].forEach(id=>document.getElementById(id).style.display=show?'block':'none');
+  if(!show){document.getElementById('sell').innerHTML='';return;}
+  document.getElementById('sell').innerHTML=keys.map(code=>{
+    const p=getP(code),q=sel[code].qty;if(!p)return '';
+    return `<div class="srow"><div class="srow-name"><div style="font-size:12px;font-weight:500;">${p[1]}${p[2]!=='-'?' <span style="font-size:10px;color:#9ca3af;">st.'+p[2]+'</span>':''}</div><div style="font-size:10px;color:#9ca3af;">${p[0]} · ${p[3]} ks/bal · ${fmt(p[4])}/bal</div></div><div class="srow-ctrl"><button class="adj" onclick="changeQty('${code}',-1)">−</button><span style="font-size:14px;font-weight:600;min-width:22px;text-align:center;">${q}</span><button class="adj" onclick="changeQty('${code}',1)">+</button></div><div class="srow-ks">${q*p[3]} ks</div><div class="srow-price">${fmt(q*p[4])}</div><button class="srow-del" onclick="removeProd('${code}')" style="border:none;background:transparent;color:#9ca3af;cursor:pointer;font-size:18px;line-height:1;padding:0;">×</button></div>`;
+  }).join('');
+}
+function updateTotals(){
+  const limFin=getLim(),limKs=getMaxKs();
+  const LIM_PODL_FIN=213.92*per;
+  let totFin=0,totKs=0,podlFin=0,podlKs=0;
+  Object.keys(sel).forEach(code=>{
+    const p=getP(code);if(!p)return;
+    if(p[5]===9){podlFin+=sel[code].qty*p[4];podlKs+=sel[code].qty*p[3];}
+    else{totFin+=sel[code].qty*p[4];totKs+=sel[code].qty*p[3];}
+  });
+  const rem=limFin-totFin;const fp=Math.min(100,Math.round(totFin/limFin*100));const kp=Math.min(100,Math.round(totKs/limKs*100));
+  const has=Object.keys(sel).length>0;
+  const tfe=document.getElementById('tfin');tfe.textContent=fmt(totFin);tfe.style.color=totFin>limFin?'#dc2626':'#111827';
+  const tke=document.getElementById('tks');tke.textContent=totKs+' ks';tke.style.color=totKs>limKs?'#dc2626':'#111827';
+  const tre=document.getElementById('trem');if(!has){tre.textContent='—';tre.style.color='#9ca3af';}else{tre.textContent=rem>=0?fmt(rem):'− '+fmt(-rem);tre.style.color=rem>=0?'#16a34a':'#dc2626';}
+  document.getElementById('fpct').textContent=fp+'%';document.getElementById('kpct').textContent=kp+'%';
+  const bf=document.getElementById('bfin');bf.style.width=fp+'%';bf.style.background=totFin>limFin?'#ef4444':fp>85?'#16a34a':'#3b82f6';
+  const bk=document.getElementById('bks');bk.style.width=kp+'%';bk.style.background=totKs>limKs?'#ef4444':kp>85?'#16a34a':'#3b82f6';
+  const fs=document.getElementById('fstat');if(!has){fs.textContent=' ';fs.className='muted';}else if(totFin>limFin){fs.textContent='Finanční limit PŘEKROČEN o '+fmt(totFin-limFin);fs.className='warn';}else{fs.textContent='Finanční limit ✓ · zbývá '+fmt(rem);fs.className='ok';}
+  const ks=document.getElementById('kstat');if(!has){ks.textContent=' ';ks.className='muted';}else if(totKs>limKs){ks.textContent='Množstevní limit PŘEKROČEN o '+(totKs-limKs)+' ks';ks.className='warn';}else{ks.textContent='Množstevní limit ✓ · zbývá '+(limKs-totKs)+' ks';ks.className='ok';}
+  // Podložky – vlastní blok (pouze III. stupeň, limit jen kusový 30 ks/měs)
+  const LIM_PODL_KS=30*per;
+  const hasPodl=podlKs>0;
+  document.getElementById('podl-block').style.display=hasPodl?'block':'none';
+  if(hasPodl){
+    const pp=Math.min(100,Math.round(podlKs/LIM_PODL_KS*100));
+    document.getElementById('podl-fin').textContent=fmt(podlFin);
+    document.getElementById('podl-ks').textContent=podlKs+' ks';
+    const podlRemKs=LIM_PODL_KS-podlKs;
+    document.getElementById('podl-rem').textContent=podlRemKs>=0?(podlRemKs+' ks zbývá'):'překročeno o '+(-podlRemKs)+' ks';
+    document.getElementById('podl-rem').style.color=podlRemKs>=0?'#16a34a':'#dc2626';
+    document.getElementById('podl-pct').textContent=pp+'%';
+    const pb=document.getElementById('podl-bar');pb.style.width=pp+'%';pb.style.background=podlKs>LIM_PODL_KS?'#ef4444':pp>85?'#16a34a':'#f59e0b';
+    const ps=document.getElementById('podl-stat');
+    if(podlKs>LIM_PODL_KS){ps.textContent='Limit kusů překročen o '+(podlKs-LIM_PODL_KS)+' ks (max. '+LIM_PODL_KS+' ks)';ps.className='warn';}
+    else{ps.textContent='Limit kusů ✓ · využito '+podlKs+' z '+LIM_PODL_KS+' ks · zbývá '+podlRemKs+' ks';ps.className='ok';}
+  }
+}
+function saveState(){
+  try{
+    const data={st,per,sel,lims:[customLims[1],customLims[2],customLims[3]]};
+    localStorage.setItem('attends_preskripce',JSON.stringify(data));
+    document.getElementById('save-status').textContent='Uloženo ✓';document.getElementById('save-status').className='ok';
+  }catch(e){document.getElementById('save-status').textContent='Stav se ukládá automaticky.';document.getElementById('save-status').className='muted';}
+}
+function loadState(){
+  try{
+    const raw=localStorage.getItem('attends_preskripce');
+    if(raw){
+      const d=JSON.parse(raw);st=d.st||1;per=d.per||1;sel=d.sel||{};
+      if(d.lims){customLims={1:d.lims[0],2:d.lims[1],3:d.lims[2]};document.getElementById('li1').value=d.lims[0];document.getElementById('li2').value=d.lims[1];document.getElementById('li3').value=d.lims[2];}
+      document.querySelectorAll('#sst button').forEach((b,i)=>b.classList.toggle('on',i===st-1));
+      document.querySelectorAll('#sper button').forEach((b,i)=>b.classList.toggle('on',i===per-1));
+      renderSel();updateTotals();
+      document.getElementById('save-status').textContent='Načteno z paměti prohlížeče ✓';document.getElementById('save-status').className='ok';
+    }
+  }catch(e){}
+}
+function buildExportText(){
+  const limFin=getLim(),limKs=getMaxKs();let totFin=0,totKs=0,podlFin=0,podlKs=0;
+  const lines=['PRESKRIPCE ATTENDS','='.repeat(44),'','Stupeň inkontinence : '+STLBL[st],'Délka preskripce    : '+PERLBL[per],'Finanční limit      : '+fmt(limFin),'Max. kusů           : '+limKs+' ks','Datum               : '+new Date().toLocaleDateString('cs-CZ'),'','-'.repeat(44),'VYBRANÉ POMŮCKY (do limitu):','-'.repeat(44),''];
+  let poukaz=0;
+  Object.keys(sel).forEach(code=>{const p=getP(code);if(!p||p[5]===9)return;const q=sel[code].qty,ks=q*p[3],fin=q*p[4];totFin+=fin;totKs+=ks;poukaz++;lines.push('Poukaz '+poukaz+':');lines.push('  Kód SÚKL  : '+p[0]);lines.push('  Název     : '+p[1]+(p[2]!=='-'?' (st.'+p[2]+')':''));lines.push('  Balení    : '+q+' × '+p[3]+' ks = '+ks+' ks');lines.push('  Cena      : '+fmt(fin));lines.push('');});
+  lines.push('='.repeat(44));lines.push('CELKEM  : '+totKs+' ks · '+fmt(totFin));lines.push('Zbývá   : '+fmt(limFin-totFin));lines.push(totFin>limFin?'! FINANČNÍ LIMIT PŘEKROČEN':'✓ Preskripce je v limitu');lines.push(totKs>limKs?'! MNOŽSTEVNÍ LIMIT PŘEKROČEN':'✓ Množstevní limit v pořádku');
+  // Podložky
+  const podlKeys=Object.keys(sel).filter(code=>{const p=getP(code);return p&&p[5]===9;});
+  if(podlKeys.length>0){
+    lines.push('');lines.push('-'.repeat(44));lines.push('PODLOŽKY — vlastní limit (213,92 Kč / 30 ks / měsíc):');lines.push('-'.repeat(44));lines.push('');
+    podlKeys.forEach(code=>{const p=getP(code);if(!p)return;const q=sel[code].qty,ks=q*p[3],fin=q*p[4];podlFin+=fin;podlKs+=ks;poukaz++;lines.push('Poukaz '+poukaz+':');lines.push('  Kód SÚKL  : '+p[0]);lines.push('  Název     : '+p[1]);lines.push('  Balení    : '+q+' × '+p[3]+' ks = '+ks+' ks');lines.push('  Cena      : '+fmt(fin));lines.push('');});
+    lines.push('Podložky celkem: '+podlKs+' ks · '+fmt(podlFin));lines.push(podlKs>30*per?'! LIMIT KUSŮ PODLOŽEK PŘEKROČEN (max. '+(30*per)+' ks)':'✓ Limit kusů podložek v pořádku');
+  }
+  return lines.join('\n');
+}
+function exportSummary(){document.getElementById('export-text').textContent=buildExportText();document.getElementById('export-overlay').style.display='block';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});}
+function downloadTxt(){const txt=buildExportText();const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='preskripce_attends_'+new Date().toISOString().slice(0,10)+'.txt';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);}
+buildCatTabs();renderCat();updateBadges();loadState();
+</script>
+</body>
+</html>
